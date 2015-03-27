@@ -69,12 +69,17 @@ We then define an extern method for openMusic():
 <code>private static extern void _openMusicLibrary();</code>
 
 Since Unity iOS plugins can only be called when running on an actual iOS device (not in the Xcode Simulator), Unity recommends to wrap the native functions in another C# layer which checks that the code is executing on a device. Let's do this by adding this code to the nativeManager script:
+
 <code>
+
 public static void openMusic()
 {
+
 	if(Application.platform == RuntimePlatform.IPhonePlayer)
 		_openMusicLibrary()
+		
 }
+
 </code>
 
 This code layer simply checks that the current platform is IPhonePlayer through a shorthand if-statement. If it returns TRUE, that means the code is running on an actual iOS device (IPhonePlayer covers both iPhones and iPads) and we're good to go!
