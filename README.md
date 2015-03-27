@@ -68,7 +68,7 @@ We then define an extern method for openMusic():
 
 <code>private static extern void _openMusicLibrary();</code>
 
-Since Unity iOS plugins can only be called when running on an actual iOS device (not in the Xcode Simulator), Unity recommends to wrap the native functions in another C# layer which checks that the code is executing on a device. Let's do this by adding this code to the nativeManager script:
+Since Unity iOS plugins can only be called when running on an actual iOS device (not in the Xcode Simulator), Unity recommends to wrap the native functions in another C# layer which checks that the code is executing on a device. Let's do this by adding this code to the nativeManager script.
 
 <code>
 
@@ -94,14 +94,14 @@ The newly created nativeManager.m file will be empty except for a line of code t
 
 <code>
 
-#import “Selector.h”
+	#import “Selector.h”
 
-void _openMusicLibrary()
-{
-	NSLog(@”Reached _openMusicLibrary”);
+	void _openMusicLibrary()
+	{
+		NSLog(@”Reached _openMusicLibrary”);
 
-	[[Selector mySelector] openMusicLibrary];
-}
+		[[Selector mySelector] openMusicLibrary];
+	}
 </code>
 
 This is where we will arrive any time nativeManager.openMusic() is called from a C# script back in Unity's managed code. But we're not done in native land just yet - we still have to add the actual code that will open the iOS Music library. Save this file on your computer (we'll add it to the Unity project later). 
