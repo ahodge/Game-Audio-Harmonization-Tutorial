@@ -72,13 +72,13 @@ Since Unity iOS plugins can only be called when running on an actual iOS device 
 
 <code>
 
-public static void openMusic()
-{
+	public static void openMusic()
+	{
 
 	if(Application.platform == RuntimePlatform.IPhonePlayer)
 		_openMusicLibrary()
 		
-}
+	}
 
 </code>
 
