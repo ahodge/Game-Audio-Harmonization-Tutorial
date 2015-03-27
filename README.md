@@ -110,12 +110,12 @@ This is where we will arrive any time nativeManager.openMusic() is called from a
 
 Now we will create a new Cocoa Touch Class (File > New > File... > iOS > Source > Cocoa Touch Class). This is going to subclass NSObject, and we'll name the class “Selector”. In reggae music, a selector is a person who assists the disc jockey by selecting the next record to be played. That's exactly what this script is going to do for us, the game's DJ, hence the name! 
 
-Once you've created this class, you should see its associated header and implementation files in an Xcode window. Select the header file. We're going to add two lines after the interface declaration and before the @end line:
+Once you've created this class, you should see its associated header and implementation files in an Xcode window. Select the header file. We're going to add two lines after the interface declaration and before the @end line.
 
 <code>
-
-+(Selector*)mySelector;
--(void)openMusicLibrary;
+	+(Selector*)mySelector;
+	-(void)openMusicLibrary;
+	
 </code>
 
 The first is a class method which we will use to set up a singleton called mySelector. The second is an instance method in which we will open the MPMediaPickerController. Save the header file and switch to Selector's implementation file. Switch its extension from .m to .mm – this tells Xcode to treat this particular class as Objective-C++. This will make sense soon.
@@ -124,18 +124,19 @@ In Selector.mm, we are going to import two iOS frameworks: MediaPlayer and AVFou
 
 <code>
 
-#import <MediaPlayer/MediaPlayer.h>
-#import <AVFoundation/AVFoundation.h>
-#include <math.h>
+	#import <MediaPlayer/MediaPlayer.h>
+	#import <AVFoundation/AVFoundation.h>
+	#include <math.h>
 </code>
 
 You can add these right below the import of “Selector.h” After adding these two import statements, we are going to add some Unity-specific code:
 
 <code>
 
-void UnityPause(int pause);
-void UnitySetAudioSessionActive(int active);
-UIViewController *UnityGetGLViewController();
+	void UnityPause(int pause);
+	void UnitySetAudioSessionActive(int active);
+	UIViewController *UnityGetGLViewController();
+	
 </code>
 
 These are functions for pausing and unpausing Unity (to conserve system resources), settings Unity's audio session on iOS to be active or inactive, and creating a standard Objective-C UIViewController from Unity's GLView. If you are curious, after we build the Unity project you can Command + Left Click on UnityGetGLViewController() while in the generated Xcode project to see where it was defined. Xcode will take you to a file called UnityAppController.mm where an inquisitive reader will notice that it is declared using 'extern “C”', effectively allowing C code to run alongside C++ by including C headers in a C++ class. This is the reason why we changed the extension of the Selector class implementation file to .mm – it tells Xcode to compile as Objective-C++, a special file type that contains a mixture of Objective-C and C++ classes. 
@@ -143,14 +144,14 @@ These are functions for pausing and unpausing Unity (to conserve system resource
 We will now add an interface declaration to Selector's implementation file. 
 
 <code>
-@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, AVAudioPlayerDelegate> {
+	@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, 			AVAudioPlayerDelegate> {
 
-}
+	}
 
-@property(nonatomic,retain)AVAudioPlayer *musicPlayer;
+	@property(nonatomic,retain)AVAudioPlayer *musicPlayer;
 
 
-@end
+	@end
 </code>
 
 We've assigned this class to be the delegate for a couple of native classes – MPMediaPickerControllerDelegate for handling interaction with MPMediaPickerController, and AVAudioPlayerDelegate for interaction with the AVAudioPlayer class that handles playback of the music we are about to select from the iOS device. We've also created an instance of AVAudioPlayer called musicPlayer.
@@ -159,26 +160,27 @@ Let's carry on making the singleton for the Selector class and add the code for 
 
 <code>
 
-+(Selector*)mySelector
-{
-	static Selector *sharedSingleton;
-	if(!sharedSingleton)
-		sharedSingleton = [[Selector alloc] init];
+	+(Selector*)mySelector
+	{
+		static Selector *sharedSingleton;
+		if(!sharedSingleton)
+			sharedSingleton = [[Selector alloc] init];
 	
-	return sharedSingleton;
-}
+		return sharedSingleton;
+	}
 
 This simply checks if an instance of Selector already exists. If it doesn't, it creates one for us.
 
--(id)init
-{
-	if((self = [super init]))
+<code>
+	-(id)init
 	{
+		if((self = [super init]))
+		{
 
+		}
+
+		return self;
 	}
-
-	return self;
-}
 </code>
 
 Since Selector is a subclass of NSObject, we need to handle its initialization. The full source code includes set up of some arrays and dictionaries needed to do the harmonization, but we won't worry about that part for now.
@@ -187,43 +189,44 @@ Finally, let's write the openMusicLibrary function:
 
 <code>
 
--(void)openMusicLibrary
-{
-	UnityPause (1); //Pause Unity
+	-(void)openMusicLibrary
+	{
+		UnityPause (1); //Pause Unity
 
-	MPMediaPickerController *myPicker = [[MPMediaPickerController alloc] initWithMediaTypes:MPMediaTypeMusic];
-	myPicker.delegate = self;
-	myPicker.allowsPickingMultipleItems = NO;
+		MPMediaPickerController *myPicker = [[MPMediaPickerController alloc] initWithMediaTypes:MPMediaTypeMusic];
+		myPicker.delegate = self;
+		myPicker.allowsPickingMultipleItems = NO;
 
-	[UnityGetGLViewController() presentViewController:myPicker animated:YES completion:nil];
+		[UnityGetGLViewController() presentViewController:myPicker animated:YES completion:nil];
 
-}
+	}
 </code>
 This code creates our MPMediaPickerController, fills it with all of the media of type “Music”, assigns its delegate to Selector, limits song selection to one at a time, and finally presents the MPMediaPickerController on top of the UIViewController containing the game view.
 
 That's fine, but we still need to write two delegate methods to determine what should happen once a song is selected. Let's do that now...
 
 <code>
--(void)mediaPicker:(MPMediaPickerController *)mediaPicker didPickMediaItems:(MPMediaItemCollection *)mediaItemCollection
-{
-        MPMediaItem *item = [[mediaItemCollection items] objectAtIndex:0];
-        NSURL *url = [item valueForProperty:MPMediaItemPropertyAssetURL];
-        self.musicPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
-        _musicPlayer.delegate = self;
-        [_musicPlayer prepareToPlay];
-        [_musicPlayer play];
-        UnityPause(0);
-        [UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
-}
+	-(void)mediaPicker:(MPMediaPickerController *)mediaPicker didPickMediaItems:(MPMediaItemCollection *)mediaItemCollection
+	{
+		MPMediaItem *item = [[mediaItemCollection items] objectAtIndex:0];
+        	NSURL *url = [item valueForProperty:MPMediaItemPropertyAssetURL];
+        	self.musicPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
+        	_musicPlayer.delegate = self;
+        	[_musicPlayer prepareToPlay];
+        	[_musicPlayer play];
+        	UnityPause(0);
+        	[UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
+	}
 
 
--(void)mediaPickerDidCancel:(MPMediaPickerController *)mediaPicker
-{
-    UnityPause(0);
-    [UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
-}
+	-(void)mediaPickerDidCancel:(MPMediaPickerController *)mediaPicker
+	{
+    		UnityPause(0);
+    		[UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
+		}
 
 </code>
+
 The first delegate function creates a new MPMediaItem from the selection, then loads and plays it with musicPlayer.
 
 The second delegate method handles the behaviour of MPMediaPickerController if the player taps “Cancel” without selecting a song – it simply unpauses Unity and dismisses the MPMediaPickerController.
@@ -256,7 +259,6 @@ where n is a signed integer representing the distance in semitones above (positi
 
 <code>
         NSMutableArray *myFrequencyArray = [[NSMutableArray alloc] init];
-        
         for (int i = 0; i<12; i++)
         {
             int j = (9 * -1) + i;
@@ -277,7 +279,7 @@ At this point we have nearly finished bridging the managed-to-native code gap. W
 Double click the script in the Inspector panel to open it in MonoDevelop. In this script's Start() function, add this line:
 
 <code>
-nativeManager.openMusic();
+	nativeManager.openMusic();
 </code>
 
 Save the file. We now have bridged the managed-to-native code gap. Let's build this Unity project and try it on an actual device. Click on File > Build Settings > Build. A prompt will appear asking you to save the build. Give it a name and click Save. Unity now generates a new Xcode project for us, and automatically adds our plugin code (from Assets > Plugins> iOS in Unity) to it in the “Libraries” folder. Great! Connect your device and build the Xcode project using the device as the target. You should now see the device's music library pop up as the game starts. Pick a song and it will start playing automatically.
@@ -346,72 +348,72 @@ We're going to return to our trusty nativeManager script for a moment. We need t
 We will use startRain() and stopRain() to trigger the start and stop of our synthesized rain loop. FlyingBotFire() will get called each time the flying bot fires its weapon. We will call the tritone() function each time the crawling bot spots us. Let's finish completing the managed-to-native bridge for these functions. Open up nativeManager.m and add this code:
 
 <code> 
-void _doTritone()
-{
-    [[Selector mySelector] tritone];
+	void _doTritone()
+	{
+    		[[Selector mySelector] tritone];
     
-}
+	}
 
-void _doStartRain()
-{
+	void _doStartRain()
+	{
     
-    NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
-    [myDefaults setObject:@"TRUE" forKey:@"isRaining"];
-    [myDefaults synchronize];
+    		NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
+    		[myDefaults setObject:@"TRUE" forKey:@"isRaining"];
+    		[myDefaults synchronize];
+    		[[Selector mySelector] startRain];
     
-    
-    [[Selector mySelector] startRain];
-    
-}
+	}
 
-void _doStopRain()
-{
+	void _doStopRain()
+	{
     
-    NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
-    [myDefaults setObject:@"FALSE" forKey:@"isRaining"];
-    [myDefaults synchronize];
+    		NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
+    		[myDefaults setObject:@"FALSE" forKey:@"isRaining"];
+    		[myDefaults synchronize];
     
-}
+	}
 
-void _doFlyingBotFire()
-{
-    [[Selector mySelector] flyingBotFire];
-}
+	void _doFlyingBotFire()
+	{
+    		[[Selector mySelector] flyingBotFire];
+	}
+	
 </code>
 We'll need to declare these new functions in our Selector class as well, so open up both Selector.h and Selector.mm. In Selector.h, add these lines:
 <code>
--(void)flyingBotFire;
--(void)tritone;
--(void)startRain;
--(void)stopRain;
+	-(void)flyingBotFire;
+	-(void)tritone;
+	-(void)startRain;
+	-(void)stopRain;
 </code>
+
 In Selector.mm, add these four functions but just leave them empty for now. 
 
 Now we have to locate the places in Angry Bot's code where these sound effects get triggered. The rain loop is triggered from a script called PlaySoundOnTrigger.js – locate it in Assets > Scripts > Misc and open it up. It contains just one function, OnTriggerEnter(), where we will make the call to nativeManager.startRain(). We will also need to add a second function, OnTriggerExit() where we will call nativeManager.stopRain(). Once finished, the script should look like this:
 <code>
-#pragma strict
+	#pragma strict
 
-@script RequireComponent (AudioSource)
-
-var onlyPlayOnce : boolean = true;
-
-private var playedOnce : boolean = false;
-
-function OnTriggerEnter (unusedArg) {
-
-	nativeManager.startRain();
-
-	if (playedOnce && onlyPlayOnce)
-		return;
+	@script RequireComponent (AudioSource)
 	
-	GetComponent.<AudioSource>().Play ();
-	playedOnce = true;
-}
+	var onlyPlayOnce : boolean = true;
 
-function OnTriggerExit (unusedArg) {
+	private var playedOnce : boolean = false;
+
+	function OnTriggerEnter (unusedArg) {
+
+		nativeManager.startRain();
+
+		if (playedOnce && onlyPlayOnce)
+			return;
+	
+		GetComponent.<AudioSource>().Play ();
+		playedOnce = true;
+	}
+
+	function OnTriggerExit (unusedArg) {
 		nativeManager.stopRain();
 
-}
+	}
 </code>
 When the flying bot fires its weapon, DoElectricArc() is called in the script named BuzzerKamikazeControllerAndAI.js. Let's add a call to nativeManager.FlyingBotFire() inside DoElectricArc(). 
 
@@ -434,108 +436,106 @@ You may have noticed that in Angry Bots, the player actually starts the level ou
 We are about to create our first AudioKit Instrument based on AKDroplet. Create a new Cocoa Touch class in Xcode, subclassing from AKInstrument, and name it WaterDroplet. In WaterDroplet.h, add this code:
 
 <code>
-@interface WaterDroplet : AKInstrument
+	@interface WaterDroplet : AKInstrument
 
-@property(nonatomic,strong)AKInstrumentProperty *amplitude;
+	@property(nonatomic,strong)AKInstrumentProperty *amplitude;
 
+	@property(readonly)AKAudio *auxOutput;
 
-@property(readonly)AKAudio *auxOutput;
-
-
-@end
+	@end
 
 
-@interface WaterDropletNote : AKNote
-@property(nonatomic,strong)AKNoteProperty *frequency;
-@property(nonatomic,strong)AKNoteProperty *amplitude;
+	@interface WaterDropletNote : AKNote
+	@property(nonatomic,strong)AKNoteProperty *frequency;
+	@property(nonatomic,strong)AKNoteProperty *amplitude;
 
-@property(nonatomic,strong)AKNoteProperty *dampingFactor;
-@property(nonatomic,strong)AKNoteProperty *energyReturn;
-@property(nonatomic,strong)AKNoteProperty *mainResonantFrequency;
-@property(nonatomic,strong)AKNoteProperty *firstResonantFrequency;
-@property(nonatomic,strong)AKNoteProperty *secondResonantFrequency;
-@property(nonatomic,strong)AKNoteProperty *intensity;
+	@property(nonatomic,strong)AKNoteProperty *dampingFactor;
+	@property(nonatomic,strong)AKNoteProperty *energyReturn;
+	@property(nonatomic,strong)AKNoteProperty *mainResonantFrequency;
+	@property(nonatomic,strong)AKNoteProperty *firstResonantFrequency;
+	@property(nonatomic,strong)AKNoteProperty *secondResonantFrequency;
+	@property(nonatomic,strong)AKNoteProperty *intensity;
 
--(instancetype)initWithFrequency:(float)frequency;
-@end
+	-(instancetype)initWithFrequency:(float)frequency;
+	@end
 
 </code>
+
 Notice how we've created an interface declaration for the WaterDroplet Instrument, and for WaterDropletNote, which subclasses from AKNote. In WaterDroplet.m, add the following code:
 <code>
-#import "WaterDroplet.h"
-#import "AKFoundation.h"
+	#import "WaterDroplet.h"
+	#import "AKFoundation.h"
 
-@implementation WaterDroplet
+	@implementation WaterDroplet
 
--(instancetype)init
-{
-    self = [super init];
-    if(self)
-    {
-        WaterDropletNote *note = [[WaterDropletNote alloc] init];
+	-(instancetype)init
+	{
+    	self = [super init];
+    	if(self)
+    	{
+	 	WaterDropletNote *note = [[WaterDropletNote alloc] init];
  
-        _amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
+	 	_amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
 
         
-        AKDroplet *waterDroplet;
+        	AKDroplet *waterDroplet;
         
         
-        waterDroplet = [[AKDroplet alloc] initWithIntensity:note.intensity dampingFactor:note.dampingFactor energyReturn:note.energyReturn mainResonantFrequency:note.mainResonantFrequency firstResonantFrequency:note.firstResonantFrequency secondResonantFrequency:note.secondResonantFrequency amplitude:_amplitude];
-        
-
-        
-        [self connect:waterDroplet];
+        	waterDroplet = [[AKDroplet alloc] initWithIntensity:note.intensity dampingFactor:note.dampingFactor 		energyReturn:note.energyReturn mainResonantFrequency:note.mainResonantFrequency 					firstResonantFrequency:note.firstResonantFrequency 									secondResonantFrequency:note.secondResonantFrequency amplitude:_amplitude];
         
 
         
-        [self setAudioOutput:[waterDroplet scaledBy:_amplitude]];
+        	[self connect:waterDroplet];
+        
+
+        
+        	[self setAudioOutput:[waterDroplet scaledBy:_amplitude]];
         
         
-    }
-    return self;
-}
+    	}
+    	return self;
+	}
 
-@end
+	@end
 
 
-@implementation WaterDropletNote
+	@implementation WaterDropletNote
 
--(instancetype)init
-{
-    self = [super init];
-    if(self)
-    {
-       
+	-(instancetype)init
+	{
+    		self = [super init];
+    		if(self)
+    		{
         
-        _dampingFactor = [self createPropertyWithValue:0.2 minimum:0 maximum:1.0];
-        _energyReturn = [self createPropertyWithValue:0.5 minimum:0 maximum:1.0];
-        _mainResonantFrequency = [self createPropertyWithValue:450 minimum:200 maximum:600];
-        _firstResonantFrequency = [self createPropertyWithValue:600 minimum:450 maximum:750];
-        _secondResonantFrequency = [self createPropertyWithValue:750 minimum:600 maximum:900];
-        _intensity = [self createPropertyWithValue:10 minimum:5 maximum:20];
+        		_dampingFactor = [self createPropertyWithValue:0.2 minimum:0 maximum:1.0];
+        		_energyReturn = [self createPropertyWithValue:0.5 minimum:0 maximum:1.0];
+        		_mainResonantFrequency = [self createPropertyWithValue:450 minimum:200 maximum:600];
+        		_firstResonantFrequency = [self createPropertyWithValue:600 minimum:450 maximum:750];
+        		_secondResonantFrequency = [self createPropertyWithValue:750 minimum:600 maximum:900];
+        		_intensity = [self createPropertyWithValue:10 minimum:5 maximum:20];
         
-        _amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
+        		_amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
         
         
-    }
-    return self;
-}
+    	}
+    	return self;
+	}
 
--(instancetype)initWithFrequency:(float)frequency
-{
-    self = [self init];
-    if(self)
-    {
-        _frequency.value = frequency;
-        _amplitude.value = 1.0;
+	-(instancetype)initWithFrequency:(float)frequency
+	{
+    		self = [self init];
+		if(self)
+		{
+			 _frequency.value = frequency;
+        		_amplitude.value = 1.0;
 
-    }
+    		}
     
-    return self;
-}
+    	return self;
+	}
 
 
-@end
+	@end
 </code>
 AudioKit 2.0 also includes a range of pre-built instruments. We'll use Tambourine for the flying bot attack sound, and FMOscillatorInstrument for the tritone that plays when we are spotted by a crawling bot.
 
@@ -543,146 +543,145 @@ Introducing the Conductor
 
 The Conductor class is responsible for playing the Instruments contained within the Orchestra. Let's create the Conductor class now. Open Xcode and create a new Cocoa Touch Class subclassing from NSObject. Name it “Conductor”. We are going to add three functions that will be called each time one of our three sound effects needs to be synthesized:
 <code>
--(void)playTone:(NSString*)tone;
--(void)playWaterDroplet:(float)intensity dampingFactor:(float)damping energyReturn:(float)energy mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
--(void)playTambourine:(float)damping mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
+	-(void)playTone:(NSString*)tone;
+	-(void)playWaterDroplet:(float)intensity dampingFactor:(float)damping energyReturn:(float)energy mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
+	-(void)playTambourine:(float)damping mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
 </code>
 Then in Conductor.m, we'll create instances of Notes for each instrument that hook into our harmonic set that we constructed based on the EchoNest information. The Conductor.m should look like this when we're all done:
 
 <code>
-#import "Conductor.h"
-#import "AKFoundation.h"
-#import "WaterDroplet.h"
-#import "ReverbProcessor.h"
-#import "Tambourine.h"
-#import "FMOscillatorInstrument.h"
-#import "KeyModeData.h"
+	#import "Conductor.h"
+	#import "AKFoundation.h"
+	#import "WaterDroplet.h"
+	#import "ReverbProcessor.h"
+	#import "Tambourine.h"
+	#import "FMOscillatorInstrument.h"
+	#import "KeyModeData.h"
 
-@implementation Conductor
-{
-    FMOscillatorInstrument *toneGenerator;
-    ReverbProcessor *reverb;
-    WaterDroplet *rain;
-    Tambourine *tambourine;
+	@implementation Conductor
+	{
+	 	FMOscillatorInstrument *toneGenerator;
+	 	ReverbProcessor *reverb;
+    		WaterDroplet *rain;
+    		Tambourine *tambourine;
     
-    NSArray *frequencies;
-    NSMutableDictionary *currentNotes;
-}
+    		NSArray *frequencies;
+    		NSMutableDictionary *currentNotes;
+	}
 
--(void)playTone:(NSString*)tone
-{
-    float frequency = [tone floatValue];
+	-(void)playTone:(NSString*)tone
+	{
+    		float frequency = [tone floatValue];
     
-    FMOscillatorNote *note = [[FMOscillatorNote alloc] initWithFrequency:frequency amplitude:1.0f];
-    [toneGenerator playNote:note];
-    [currentNotes setObject:note forKey:tone];
+    		FMOscillatorNote *note = [[FMOscillatorNote alloc] initWithFrequency:frequency amplitude:1.0f];
+    		[toneGenerator playNote:note];
+    		[currentNotes setObject:note forKey:tone];
 
-    [self performSelector:@selector(stopTone:) withObject:note afterDelay:0.5];
-}
+    		[self performSelector:@selector(stopTone:) withObject:note afterDelay:0.5];
+	}	
 
--(void)stopTone:(FMOscillatorNote*)noteTone
-{
-    AKSequence *releaseSequence = [AKSequence sequence];
+	-(void)stopTone:(FMOscillatorNote*)noteTone
+	{
+		 AKSequence *releaseSequence = [AKSequence sequence];
     
-    AKEvent *decreaseVolume = [[AKEvent alloc] initWithBlock:^{
-        noteTone.amplitude.value *= 0.95;
-    }];
+		 AKEvent *decreaseVolume = [[AKEvent alloc] initWithBlock:^{
+		 noteTone.amplitude.value *= 0.95;
+    	}];
     
-    for(int i=0; i<100; i++)
-    {
-        [releaseSequence addEvent:decreaseVolume afterDuration:0.001];
-    }
+    	for(int i=0; i<100; i++)
+    	{
+        	[releaseSequence addEvent:decreaseVolume afterDuration:0.001];
+	 }
     
-    AKEvent *stop = [[AKEvent alloc] initWithBlock:^{
+    	AKEvent *stop = [[AKEvent alloc] initWithBlock:^{
         [noteTone stop];
-    }];
-    [releaseSequence addEvent:stop afterDuration:0.01];
-    [releaseSequence play];
-}
+    	}];
+    	[releaseSequence addEvent:stop afterDuration:0.01];
+    	[releaseSequence play];
+	}
 
--(void)playWaterDroplet:(float)intensity dampingFactor:(float)damping energyReturn:(float)energy mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp
-{
-    rain.amplitude = [[AKInstrumentProperty alloc] initWithValue:amp];
+	-(void)playWaterDroplet:(float)intensity dampingFactor:(float)damping energyReturn:(float)energy mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp
+	{
+    	rain.amplitude = [[AKInstrumentProperty alloc] initWithValue:amp];
+    	WaterDropletNote *note = [[WaterDropletNote alloc] initWithFrequency:mainFreq];
+    	note.intensity.value = intensity;
+    	note.dampingFactor.value = damping;
+    	note.energyReturn.value = energy;
+    	note.mainResonantFrequency.value = mainFreq;
+    	note.firstResonantFrequency.value = firstFreq;
+    	note.secondResonantFrequency.value = secondFreq;
+    	note.duration.value = 1.0;
+
+    	[rain playNote:note];
+	}
+	
+	-(void)playTambourine:(float)damping mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp
+	{
+    		tambourine.amplitude.value = 1.0;
     
+    		TambourineNote *note = [[TambourineNote alloc] init];
+    		note.dampingFactor.value = damping;
+    		note.mainResonantFrequency.value = mainFreq;
+    		note.firstResonantFrequency.value = firstFreq;
+    		note.secondResonantFrequency.value = secondFreq;
+    		note.duration.value = 1.0;
+
+    		[tambourine playNote:note];
     
-    WaterDropletNote *note = [[WaterDropletNote alloc] initWithFrequency:mainFreq];
-    note.intensity.value = intensity;
-    note.dampingFactor.value = damping;
-    note.energyReturn.value = energy;
-    note.mainResonantFrequency.value = mainFreq;
-    note.firstResonantFrequency.value = firstFreq;
-    note.secondResonantFrequency.value = secondFreq;
-    note.duration.value = 1.0;
+	}
 
-    [rain playNote:note];
-}
--(void)playTambourine:(float)damping mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp
-{
-    tambourine.amplitude.value = 1.0;
-    
-    TambourineNote *note = [[TambourineNote alloc] init];
-    note.dampingFactor.value = damping;
-    note.mainResonantFrequency.value = mainFreq;
-    note.firstResonantFrequency.value = firstFreq;
-    note.secondResonantFrequency.value = secondFreq;
-    note.duration.value = 1.0;
+	-(instancetype)init
+	{
+		self = [super init];
+    		if(self)
+    		{
+        
+        
+        	KeyModeData *myData = [KeyModeData getInstance];
+        
+        	currentNotes = [[NSMutableDictionary alloc] init];
+        	
+        	noteFreqDict = [[NSMutableDictionary alloc] initWithDictionary:myData.noteFreqDictionary];
+        
+        	toneGenerator = [[FMOscillatorInstrument alloc] init];
+        
+        	[AKOrchestra addInstrument:toneGenerator];
 
-    [tambourine playNote:note];
-    
-}
+        	rain = [[WaterDroplet alloc] init];
+        	[AKOrchestra addInstrument:rain];
 
--(instancetype)init
-{
-    self = [super init];
-    if(self)
-    {
-        
-        
-        KeyModeData *myData = [KeyModeData getInstance];
-        
-        currentNotes = [[NSMutableDictionary alloc] init];
-        
-        noteFreqDict = [[NSMutableDictionary alloc] initWithDictionary:myData.noteFreqDictionary];
-        
-        toneGenerator = [[FMOscillatorInstrument alloc] init];
-        
-        [AKOrchestra addInstrument:toneGenerator];
-
-        rain = [[WaterDroplet alloc] init];
-        [AKOrchestra addInstrument:rain];
-
-        tambourine = [[Tambourine alloc] init];
-        [AKOrchestra addInstrument:tambourine];
+        	tambourine = [[Tambourine alloc] init];
+        	[AKOrchestra addInstrument:tambourine];
   
-        reverb = [[ReverbProcessor alloc] initWithAudioSource:rain.auxOutput];
-        [AKOrchestra addInstrument:reverb];
-        [[AKManager sharedManager] setIsLogging:YES];
-        [AKOrchestra start];
+        	reverb = [[ReverbProcessor alloc] initWithAudioSource:rain.auxOutput];
+        	[AKOrchestra addInstrument:reverb];
+        	[[AKManager sharedManager] setIsLogging:YES];
+        	[AKOrchestra start];
     
-        [reverb play];
+        	[reverb play];
         
-    }
+    	}
     
-    return self;
-}
+	 return self;
+	}
 
-@end
+	@end
 
 </code>
 The Final Steps
 
 At this point, we've plugged Unity into AudioKit by creating a managed-to-native code bridge. We've presented the player an interface for choosing a song to play, and we are able to determine the key and mode for a chosen song by using the EchoNest API. We've programatically created a harmonic set of notes to use in the synthesis of our new sound effects, and we've added the three new Instrument types to the AudioKit Orchestra. All that's left to do is call on the Conductor to play these sound effects. We're going to do this from our Selector class. In Selector.mm, import our newly created Conductor class with this line:
 <code>
-#import “Conductor.h”
+	#import “Conductor.h”
 </code>
 We will then create a new instance of the Conductor within the interface declaration:
 <code>
-@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, AVAudioPlayerDelegate> {
+	@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, AVAudioPlayerDelegate> {
     
-    Conductor *conductor;
+    	Conductor *conductor;
     
     
-}
+	}
 </code>
 Next, we allocate and initialize the Conductor in Selector's init() function:
 <code>
@@ -692,58 +691,58 @@ Next, we allocate and initialize the Conductor in Selector's init() function:
 Now we can start playing notes. Let's fill in the empty functions startRain(), tritone(), and flyingBotFire() that we created in Selector.mm earlier:
 
 <code>
--(void)startRain
-{
-    [conductor playWaterDroplet:10 dampingFactor:0.01 energyReturn:0.6 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
+	-(void)startRain
+	{
+    		[conductor playWaterDroplet:10 dampingFactor:0.01 energyReturn:0.6 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
     
-    NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
+    	NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
     
-    if([[myDefaults objectForKey:@"isRaining"] isEqualToString:@"TRUE"])
-    {
-        [self performSelector:@selector(rainLoop) withObject:nil afterDelay:0.025];
-    }
+    	if([[myDefaults objectForKey:@"isRaining"] isEqualToString:@"TRUE"])
+    	{
+        	[self performSelector:@selector(rainLoop) withObject:nil afterDelay:0.025];
+    	}
 
-}
+	}
 </code>
 Here we call playWaterDroplet with the Conductor. Then we enter an if-statement to check if we are still in an area of the level where it is raining. If we are, we call startRain again after a delay of 0.025 seconds. This means that as long as it is raining, we should synthesize a new water droplet 40 times per second.
 <code>
--(void)tritone
-{
-    KeyModeData *myData = [KeyModeData getInstance];
+	-(void)tritone
+	{
+    		KeyModeData *myData = [KeyModeData getInstance];
     
-    if(_currentKey)
-    {
+    		if(_currentKey)
+    		{
         
-        NSString *commonName = [[NSString alloc] initWithString:[myData.keyData objectForKey:_currentKey]];
-        NSArray *noteSet = [NSArray arrayWithObjects:@"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", @"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", nil];
+		 NSString *commonName = [[NSString alloc] initWithString:[myData.keyData objectForKey:_currentKey]];
+		 NSArray *noteSet = [NSArray arrayWithObjects:@"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", @"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", nil];
         
-        NSLog(@"keyData: %@", myData.keyData);
+        	NSLog(@"keyData: %@", myData.keyData);
         
-        NSMutableString *augFourth = [[NSMutableString alloc] initWithString:@""];
+        	NSMutableString *augFourth = [[NSMutableString alloc] initWithString:@""];
         
-        for (int i=0; i<[noteSet count]; i++)
-        {
-            if([[noteSet objectAtIndex:i] isEqualToString:commonName])
-            {
-                augFourth = [noteSet objectAtIndex:i+6]; //A tritone is composed of the Key (tonic) note and an augmented fourth, or 6 semitones above the tonic note.
+        	for (int i=0; i<[noteSet count]; i++)
+        	{
+            		if([[noteSet objectAtIndex:i] isEqualToString:commonName])
+            		{
+                		augFourth = [noteSet objectAtIndex:i+6]; //A tritone is composed of the Key (tonic) note and an augmented fourth, or 6 semitones above the tonic note.
                 
-                i = [noteSet count];
-            }
-        }
-        NSLog(@"tritone consists of %@ and %@", commonName, augFourth);
-        NSArray *tritoneArray = [[NSArray alloc] initWithObjects:[_noteFreqDict objectForKey:commonName], [_noteFreqDict objectForKey:augFourth], nil];
-        for(int i=0; i<[tritoneArray count]; i++)
-        {
-            [conductor playTone:[tritoneArray objectAtIndex:i]];
+                	i = [noteSet count];
+            		}
+        	}
+        	NSLog(@"tritone consists of %@ and %@", commonName, augFourth);
+        	NSArray *tritoneArray = [[NSArray alloc] initWithObjects:[_noteFreqDict objectForKey:commonName], 			[_noteFreqDict objectForKey:augFourth], nil];
+        	for(int i=0; i<[tritoneArray count]; i++)
+        	{
+            		[conductor playTone:[tritoneArray objectAtIndex:i]];
             
-        }
+        	}
         
-    }
-}
+    		}
+	}
 </code>
 Here we construct a new harmonic set – a tritone. A tritone is a very dissonant musical interval, and serves to create tension when the player is spotted by a crawling bot. We play the tritone with the FMOscillatorInstrument.
 <code>
--(void)flyingBotFire
+	-(void)flyingBotFire
 {
         [conductor playTambourine:0.01 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
 }
