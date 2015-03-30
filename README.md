@@ -1,17 +1,17 @@
 # Game-Audio-Harmonization-Tutorial
-Building a harmonization engine for game audio using Unity 5 and AudioKit 2.0
+## Building a harmonization engine for game audio using Unity 5 and AudioKit 2.0
 
 Languages used: C#, Objective-C
 
-Overview
+## Overview
 
 This tutorial will guide you through the process of using AudioKit within a Unity iOS project to create procedural sound effects that are harmonized with the game music. The tutorial expects a basic level of familiarity with Unity and its game development environment, as well as Apple's Xcode IDE and Objective-C. The tutorial uses Unity 5.0.0.f4, available at http://www.unity3d.com, Xcode 6.2 available at https://developer.apple.com/xcode/downloads/), and AudioKit 2.0 available at http://www.audiokit.io. AudioKit is an open source iOS library for audio synthesis, processing, and analysis. 
 
-The demo game: Angry Bots
+## The demo game: Angry Bots
 
 Angry Bots is a third person shooter game that is available as a free asset on Unity's Asset Store. The gameplay is straightforward. The player must navigate a dark futuristic factory setting in which the automated robot workers of the future have managed to override the first Asimovian law of robotics and have started attacking humans. The game has sound effects bundled with the asset, and while they are well suited for the dark and industrial mood of the game, it can be boring to hear the same static sound effects during repeated play. Angry Bots also does not have any musical component. For this tutorial, we will let the player be the DJ by allowing them choose their own musical soundtrack from their iOS Music library and then harmonize game sound effects with the music!
 
-Getting Started – Setup and configuration of Unity
+## Getting Started – Setup and configuration of Unity
 
 If you haven't already, download Unity 5, Xcode, and AudioKit from the links above. Once Unity is installed, create a new 3D project. Open the Unity Asset Store (Window > Asset Store) and download the Angry Bots asset (http://u3d.as/5CF). You will see a warning about Unity 5 compatibility, but don't worry about it for now – it is still playable and useful for rapid prototyping.
 
@@ -28,11 +28,11 @@ Double click on the AngryBots.unity scene file in the Assets folder of your Unit
 
 Now that you've familiarized yourself with Angry Bots, let's get down to the business of configuring the Unity project to use Objective-C, the native code of the iOS (and Mac OS X) platforms. (Bonus points will be awarded to any reader that takes it upon themselves to convert this tutorial's native code to Swift!)
 
-Plugging Unity into AudioKit – plugins bridge the managed-to-native code gap
+## Plugging Unity into AudioKit – plugins bridge the managed-to-native code gap
 
 AudioKit is an iOS specific library – we must find a way to use it within our game. Unity games are usually written in C# or Javascript (commonly referred to as “managed” code). AudioKit wraps the generation of Csound's Music-N style strings in an Objective-C/Swift layer (referred to as “native” code because it is native to the platform that we are going to target with our Unity build). Luckily for us, Unity provides some built in features to help achieve this using plugins.
 
-Plugin Setup
+### Plugin Setup
 
 Unity looks for plugins in a folder called “Plugins” within the project's Assets folder. This folder does not exist in our project yet, so go ahead and create it (Right click in the Project view, then select Create > Folder). Make sure it is named “Plugins” exactly so, without any spaces or other characters. Because this is an iOS plugin, we will also need to create another folder within the newly created Plugins folder, and name the new folder “iOS”, with similar attention to form. Our directory structure should look like this now:
 
@@ -44,7 +44,7 @@ You may have noticed already that Unity's current build target for Angry Bots is
 
 Unity will prompt you to run the API updater again. We are happy to comply. Once the platform has been switched and code updated, we can carry on with building the plugin.
 
-Picking a song from the iOS Music Library 
+### Picking a song from the iOS Music Library 
 
 Before we can get into the really cool stuff – procedurally generating sound effects that are harmonized with the game music – we still need to allow the player to choose a song! We will make use of MPMediaPickerController, a native iOS class that handles user interaction and selection of media from an iOS device's library. For the sake of simplicity, we will launch an instance of this class just once, when the game first loads. Let's write code!
 
@@ -86,7 +86,7 @@ This code layer simply checks that the current platform is IPhonePlayer through 
 
 That's all we're going to do in nativeManager.cs for now, so save the file. We will now temporarily leave the managed environment and move to native land, where we will write the Objective-C code that will run when openMusic() gets called from a C# script.
 
-Native Environment – Xcode
+## Native Environment – Xcode
 
 Get ready for a context switch, because we are going to start writing code in Objective-C rather than C#. Open up Xcode and create a new Objective-C file (File > New > File... > iOS > Source > Objective-C File). We are going to name this nativeManager.m, keeping the file type as “Empty File”. It is not a coincidence that we now have two files sharing the name nativeManager – in fact it is crucial that this pair of files (.cs and .m) be named identically!
 
@@ -106,7 +106,7 @@ The newly created nativeManager.m file will be empty except for a line of code t
 
 This is where we will arrive any time nativeManager.openMusic() is called from a C# script back in Unity's managed code. But we're not done in native land just yet - we still have to add the actual code that will open the iOS Music library. Save this file on your computer (we'll add it to the Unity project later). 
 
-(Fast forward, Selector)
+## (Fast forward, Selector)
 
 Now we will create a new Cocoa Touch Class (File > New > File... > iOS > Source > Cocoa Touch Class). This is going to subclass NSObject, and we'll name the class “Selector”. In reggae music, a selector is a person who assists the disc jockey by selecting the next record to be played. That's exactly what this script is going to do for us, the game's DJ, hence the name! 
 
@@ -231,7 +231,7 @@ The first delegate function creates a new MPMediaItem from the selection, then l
 
 The second delegate method handles the behaviour of MPMediaPickerController if the player taps “Cancel” without selecting a song – it simply unpauses Unity and dismisses the MPMediaPickerController.
 
-A Note on Harmony
+## A Note on Harmony
 
 The plugin we are building requires an internet connection to query the EchoNest API. The full source code includes the ability to extract metadata associated with the chosen song to determine the Artist and Title. This is passed to a PHP web service provided by Veemix (https://www.veemix.com), which queries EchoNest's API to determine the Key and Mode for the chosen song and returns this result to the plugin. Key refers to the tonic note and chord which resolves tension in piece of music. Mode in this case refers to either major (happier sounding) or minor (sad). We will use this information to determine how we should synthesize the sound effects we will create with AudioKit. If you read through all of the code in this delegate function, you probably noticed a call to another function within the Selector class – updateCurrentInfo{} – this is where we create a harmonic set of notes based on the mode. The tonic note (determined by the key) is found within an array of note names and is added to the new harmonic set. If the mode is determined to be Major, the major third (an increase of 4 semitones from the octave) and a fifth (an increase of 7 semitones from the tonic) are included in the harmonic set. If the mode is determined to be Minor, the harmonic set will contain a minor third (an increase of 3 semitones from the tonic) and a fifth. 
 
@@ -270,7 +270,7 @@ where n is a signed integer representing the distance in semitones above (positi
 
 We'll store these arrays and dictionaries and use them later when specifying note parameters with AudioKit. Go ahead and add nativeManager.m, Selector.h, and Selector.mm to your Unity project's Assets > Plugins > iOS folder.
 
-Back to Managed Land – one more thing in Unity
+## Back to Managed Land – one more thing in Unity
 
 At this point we have nearly finished bridging the managed-to-native code gap. We just need to add one more thing: a line of managed code that calls nativeManager.openMusic(). Let's add that now. Save everything in Xcode and go back to Unity. Select the “Player” game object in Unity's Hierarchy panel. With it selected, scroll to the bottom of the Inspector panel and click Add Component > New Script, name it anything you like (I chose to use Selector again because it will be responsible for calling the native function that launches the MPMediaPickerController). Set the language to be C Sharp. Click “Create and Add”. 
 
@@ -284,7 +284,7 @@ Double click the script in the Inspector panel to open it in MonoDevelop. In thi
 
 Save the file. We now have bridged the managed-to-native code gap. Let's build this Unity project and try it on an actual device. Click on File > Build Settings > Build. A prompt will appear asking you to save the build. Give it a name and click Save. Unity now generates a new Xcode project for us, and automatically adds our plugin code (from Assets > Plugins> iOS in Unity) to it in the “Libraries” folder. Great! Connect your device and build the Xcode project using the device as the target. You should now see the device's music library pop up as the game starts. Pick a song and it will start playing automatically.
 
-Attenuating the original sound effects
+### Attenuating the original sound effects
 
 
 
@@ -421,7 +421,7 @@ Finally, when a crawling bot spots the player, OnSpotted() in AI.js is called. L
 
 Now we are ready to make our own sounds to replace the 3 that we've attenuated. 
 
-Unity iOS + AudioKit = A soundhead's playground
+## Unity iOS + AudioKit = A soundhead's playground
 
 We've covered a lot so far, but we haven't created any new sounds yet. Let's rectify that by introducing AudioKit, currently on version 2.0. It supports iOS and Mac OS X, and also includes some shell scripts for its new feature called Playgrounds. We are only interested in the iOS related stuff (for now!) 
 
@@ -429,7 +429,7 @@ Locate the folder called “AudioKit” within AudioKit-master and drag and drop
 
 Let's explain quickly how we are going to make sounds with AudioKit (for a complete description and documentation of AudioKit, refer to its website). AudioKit inherits certain terminology from Csound, a programming language designed specifically for audio and which has roots in the 1950s during the first experiments with digital audio synthesis. With AudioKit, a sound is represented as a Note for which mutable parameters like duration, which controls the duration of the synthesized sound on a granular level. The type of sound the Note will make is determined by its Instrument type, and each type has its own parameters – this can range from the resonant frequencies of a physical model of a water droplet to the cutoff frequency of a low-pass filter (effects, as well as analyzers, are also considered Instruments in AudioKit). The Instruments have to be added to an Orchestra, a collection of all the Instruments in an AudioKit application, before they can be played by a Conductor class. Let's see how this works in code by synthesizing our first sound effects.
 
-Making it Rain
+## Making it Rain
 
 You may have noticed that in Angry Bots, the player actually starts the level outside the factory floor, where a steady rain is falling. This is a good opportunity to use the Instrument representing a physical model of a water droplet that I mentioned earlier. In AudioKit, this Instrument is called AKDroplet, which exposes three resonant frequencies as parameters that we can use to harmonize the sound of each droplet to the game music. We'll have to synthesize many of these individual droplet Notes per second to make it sound like continuous rainfall. Let's make it rain!
 
@@ -539,7 +539,7 @@ Notice how we've created an interface declaration for the WaterDroplet Instrumen
 </code>
 AudioKit 2.0 also includes a range of pre-built instruments. We'll use Tambourine for the flying bot attack sound, and FMOscillatorInstrument for the tritone that plays when we are spotted by a crawling bot.
 
-Introducing the Conductor
+## Introducing the Conductor
 
 The Conductor class is responsible for playing the Instruments contained within the Orchestra. Let's create the Conductor class now. Open Xcode and create a new Cocoa Touch Class subclassing from NSObject. Name it “Conductor”. We are going to add three functions that will be called each time one of our three sound effects needs to be synthesized:
 <code>
@@ -553,7 +553,6 @@ Then in Conductor.m, we'll create instances of Notes for each instrument that ho
 	#import "Conductor.h"
 	#import "AKFoundation.h"
 	#import "WaterDroplet.h"
-	#import "ReverbProcessor.h"
 	#import "Tambourine.h"
 	#import "FMOscillatorInstrument.h"
 	#import "KeyModeData.h"
@@ -561,7 +560,6 @@ Then in Conductor.m, we'll create instances of Notes for each instrument that ho
 	@implementation Conductor
 	{
 	 	FMOscillatorInstrument *toneGenerator;
-	 	ReverbProcessor *reverb;
     		WaterDroplet *rain;
     		Tambourine *tambourine;
     
@@ -653,13 +651,10 @@ Then in Conductor.m, we'll create instances of Notes for each instrument that ho
         	tambourine = [[Tambourine alloc] init];
         	[AKOrchestra addInstrument:tambourine];
   
-        	reverb = [[ReverbProcessor alloc] initWithAudioSource:rain.auxOutput];
-        	[AKOrchestra addInstrument:reverb];
         	[[AKManager sharedManager] setIsLogging:YES];
         	[AKOrchestra start];
     
-        	[reverb play];
-        
+
     	}
     
 	 return self;
@@ -668,7 +663,7 @@ Then in Conductor.m, we'll create instances of Notes for each instrument that ho
 	@end
 
 </code>
-The Final Steps
+## The Final Steps
 
 At this point, we've plugged Unity into AudioKit by creating a managed-to-native code bridge. We've presented the player an interface for choosing a song to play, and we are able to determine the key and mode for a chosen song by using the EchoNest API. We've programatically created a harmonic set of notes to use in the synthesis of our new sound effects, and we've added the three new Instrument types to the AudioKit Orchestra. All that's left to do is call on the Conductor to play these sound effects. We're going to do this from our Selector class. In Selector.mm, import our newly created Conductor class with this line:
 <code>
