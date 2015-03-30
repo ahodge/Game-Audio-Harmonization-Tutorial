@@ -15,16 +15,23 @@ Angry Bots is a third person shooter game that is available as a free asset on U
 
 If you haven't already, download Unity 5, Xcode, and AudioKit from the links above. Once Unity is installed, create a new 3D project. Open the Unity Asset Store (Window > Asset Store) and download the Angry Bots asset (http://u3d.as/5CF). You will see a warning about Unity 5 compatibility, but don't worry about it for now – it is still playable and useful for rapid prototyping.
 
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Incompatibility_Warning.png "Unity 5 has changed a lot under the hood.")
+
 When the asset is done downloading, Unity will present to you an Import window. Make sure all the checkboxes are selected, then go ahead and click “Import” to import the Angry Bots asset into your newly created project.
 
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Import.png "Fresh copy of Angry Bots, incoming!")
+
 Once imported, Unity is going to prompt you to run the API updater. Go ahead and do that.
+
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_API_update.png "The polite API Updater prompt.")
+
 
 Double click on the AngryBots.unity scene file in the Assets folder of your Unity project. You should now see the game environment appear in Unity's Scene view. Try running the game by clicking the “Play” button at the top center of Unity's window. You should be able to try out the game by moving your character with WASD keys and the mouse. Left click to fire your weapon and blow up some bots. Click the “Play” button again to stop the game and return to the Scene editor view. 
 
 ***You'll probably notice that some areas of the environment (parts of the floor, specifically) do not appear to have a texture and appear solid black. This is due some of the aforementioned incompatibilities with Unity 5. If you care about fixing their appearances, you can do so easily by left-clicking on the relevant area in the Scene editor and assigning that game object a new shader value in Unity's Inspector panel. See the screenshot below for an example of how to do this for the circular platform beside the player character at the start of the level. This particular section of the environment is named “polySurface4886” in the Scene's Hierarchy panel, and I've assigned its new shader value of “AngryBots/SimpleSelfIllumination”***
 
-
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_screenshot1.png "Certain game objects are appearing completely black. We can fix that...")
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_shader_fix.png "...by tweaking their shader parameters.")
 
 Now that you've familiarized yourself with Angry Bots, let's get down to the business of configuring the Unity project to use Objective-C, the native code of the iOS (and Mac OS X) platforms. (Bonus points will be awarded to any reader that takes it upon themselves to convert this tutorial's native code to Swift!)
 
@@ -36,11 +43,11 @@ AudioKit is an iOS specific library – we must find a way to use it within our 
 
 Unity looks for plugins in a folder called “Plugins” within the project's Assets folder. This folder does not exist in our project yet, so go ahead and create it (Right click in the Project view, then select Create > Folder). Make sure it is named “Plugins” exactly so, without any spaces or other characters. Because this is an iOS plugin, we will also need to create another folder within the newly created Plugins folder, and name the new folder “iOS”, with similar attention to form. Our directory structure should look like this now:
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Assets_folder.png "A blank canvas for plugin creation.")
 
 You may have noticed already that Unity's current build target for Angry Bots is “PC, Mac, & Linux Standalone”. We want to switch this to target iOS, so navigate to the project's Build Settings (File > Build Settings), select iOS, and click “Switch Platform”. Unity will make the necessary changes under the hood and should display a progress bar as this occurs. This part may take a while, so use this time to add music to your iOS device via iTunes if you haven't already. 
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_BuildSettings.png "We are building to iOS today.")
 
 Unity will prompt you to run the API updater again. We are happy to comply. Once the platform has been switched and code updated, we can carry on with building the plugin.
 
@@ -58,7 +65,7 @@ This particular script depends on a namespace that is not included by default. A
 
 The script should now look like this:
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_nativeManager_script2.png "Looking good so far, nativeManager.")
 
 nativeManager will be responsible for exposing native functions to managed scripts through a C interface. Let's add our first plugin function: openMusic(). Unity iOS plugins are statically linked to the executable. To accommodate this reality, we use “__Internal” as the library name. We import it by writing:
 
@@ -89,6 +96,8 @@ That's all we're going to do in nativeManager.cs for now, so save the file. We w
 ## Native Environment – Xcode
 
 Get ready for a context switch, because we are going to start writing code in Objective-C rather than C#. Open up Xcode and create a new Objective-C file (File > New > File... > iOS > Source > Objective-C File). We are going to name this nativeManager.m, keeping the file type as “Empty File”. It is not a coincidence that we now have two files sharing the name nativeManager – in fact it is crucial that this pair of files (.cs and .m) be named identically!
+
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Xcode_file_creation.png "Continuing our work in Xcode...")
 
 The newly created nativeManager.m file will be empty except for a line of code that imports the iOS Foundation framework. You can go ahead delete that line, as it is not necessary for this particular file. We are now going to add the _openMusicLibrary() function to this script. We will also import and make a call to the yet-to-be-created Selector class. 
 
@@ -274,7 +283,7 @@ We'll store these arrays and dictionaries and use them later when specifying not
 
 At this point we have nearly finished bridging the managed-to-native code gap. We just need to add one more thing: a line of managed code that calls nativeManager.openMusic(). Let's add that now. Save everything in Xcode and go back to Unity. Select the “Player” game object in Unity's Hierarchy panel. With it selected, scroll to the bottom of the Inspector panel and click Add Component > New Script, name it anything you like (I chose to use Selector again because it will be responsible for calling the native function that launches the MPMediaPickerController). Set the language to be C Sharp. Click “Create and Add”. 
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Inspector_panel.png "Adding the call to nativeManager.openMusic from Selector.cs")
 
 Double click the script in the Inspector panel to open it in MonoDevelop. In this script's Start() function, add this line:
 
@@ -296,10 +305,11 @@ For this tutorial, we'll focus on replacing three specific sound effects in Angr
 
 To do this we are going to add an Audio Mixer object to our Unity project, route these specific sound effects through its main Group, and fully attenuate their volume. Navigate to the Unity project's Assets folder and click Assets > Create > Audio Mixer. Let's name the new mixer “myMixer”. 
 
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_AudioMixer.png "Every game DJ should have their own mixer. Let's add one to our Unity project!")
 
 Double click the new Audio Mixer and fully attenuate the volume on the Master group to -80.0 dB. Now we have to route the sound effects to the Master group. Navigate to Assets > Sounds > Ambience and select the file named “ambience_rain_outside”. This the sound of the rainfall that loops continously. Right-click on it and select “Find References in Scene”. You'll notice that the Scene view turns grey and reveals 8 game objects, all called “Rain” in the Hierarchy panel. These are the areas that trigger the rain loop to play when the Player encounters them. Select all 8 and look at the Inspector panel where you should see an Audio Source component. We can route the Audio Source's output to the Master group of the Audio Mixer by clicking the small circle to the immediate right of the empty Output field, and selecting the Master group from the popup list. 
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_Mixer_Group.png "Making room for the new procedural audio goodness by routing the old stale sound effects to a mixer group that will be attenuated.")
 
 We can repeat the same steps for the other two sound effects. The enemy attack sounds are located in Assets > Sounds > Enemy. Find the file named “enemy_Spider_AlertSound” and find all of its references in the scene. This reveals many game objects in the Hierarchy, but we are only interested in the ones named “AI”, so select all of those. Once you've selected them, route their Audio Source's output to the Master group like we did before. The last sound effect is called “enemy_FlyingBuzzer_ZapElectric”. Find all of its references in the scene (in this case all of the relevant game objects are called “KamikazeBuzzer”), and route their Audio Source's outputs to the Master group on the Audio Mixer. 
 
