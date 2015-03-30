@@ -1,5 +1,5 @@
 # Game Audio Harmonization Tutorial
-## Building a harmonization engine for game audio using Unity 5 and AudioKit 2.0
+## Building a harmonization engine for game audio with Unity 5, Veemix, and AudioKit 2.0
 
 Languages used: C#, Objective-C
 
