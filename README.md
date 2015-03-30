@@ -27,7 +27,6 @@ Once imported, Unity is going to prompt you to run the API updater. Go ahead and
 
 ![Alt text](http://www.anor.ac/tutorial_images/AngryBots_API_update.png "The polite API Updater prompt.")
 
-
 Double click on the AngryBots.unity scene file in the Assets folder of your Unity project. You should now see the game environment appear in Unity's Scene view. Try running the game by clicking the “Play” button at the top center of Unity's window. You should be able to try out the game by moving your character with WASD keys and the mouse. Left click to fire your weapon and blow up some bots. Click the “Play” button again to stop the game and return to the Scene editor view. 
 
 ***You'll probably notice that some areas of the environment (parts of the floor, specifically) do not appear to have a texture and appear solid black. This is due some of the aforementioned incompatibilities with Unity 5. If you care about fixing their appearances, you can do so easily by left-clicking on the relevant area in the Scene editor and assigning that game object a new shader value in Unity's Inspector panel. See the screenshot below for an example of how to do this for the circular platform beside the player character at the start of the level. This particular section of the environment is named “polySurface4886” in the Scene's Hierarchy panel, and I've assigned its new shader value of “AngryBots/SimpleSelfIllumination”***
@@ -155,12 +154,11 @@ These are functions for pausing and unpausing Unity (to conserve system resource
 We will now add an interface declaration to Selector's implementation file. 
 
 <code>
+	
 	@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, 			AVAudioPlayerDelegate> {
-
 	}
 
 	@property(nonatomic,retain)AVAudioPlayer *musicPlayer;
-
 
 	@end
 </code>
@@ -187,7 +185,6 @@ This simply checks if an instance of Selector already exists. If it doesn't, it 
 	{
 		if((self = [super init]))
 		{
-
 		}
 
 		return self;
@@ -219,16 +216,24 @@ That's fine, but we still need to write two delegate methods to determine what s
 <code>
 	-(void)mediaPicker:(MPMediaPickerController *)mediaPicker didPickMediaItems:(MPMediaItemCollection *)mediaItemCollection
 	{
+	
 		MPMediaItem *item = [[mediaItemCollection items] objectAtIndex:0];
+		
         	NSURL *url = [item valueForProperty:MPMediaItemPropertyAssetURL];
+        	
         	self.musicPlayer = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:nil];
+        	
         	_musicPlayer.delegate = self;
+        	
         	[_musicPlayer prepareToPlay];
+        	
         	[_musicPlayer play];
+        	
         	UnityPause(0);
+        	
         	[UnityGetGLViewController() dismissViewControllerAnimated:YES completion:nil];
+        	
 	}
-
 
 	-(void)mediaPickerDidCancel:(MPMediaPickerController *)mediaPicker
 	{
@@ -270,12 +275,18 @@ where n is a signed integer representing the distance in semitones above (positi
 
 <code>
         NSMutableArray *myFrequencyArray = [[NSMutableArray alloc] init];
+        
         for (int i = 0; i<12; i++)
         {
+        
             int j = (9 * -1) + i;
+            
             float k = j/12.0f;
+            
             float frequency = 440 * (powf(2.0f, k));
+            
             [myFrequencyArray addObject:[NSString stringWithFormat:@"%f", frequency]];
+            
         }
 </code>
 
@@ -363,7 +374,6 @@ We will use startRain() and stopRain() to trigger the start and stop of our synt
 	void _doTritone()
 	{
     		[[Selector mySelector] tritone];
-    
 	}
 
 	void _doStartRain()
@@ -392,10 +402,14 @@ We will use startRain() and stopRain() to trigger the start and stop of our synt
 	
 </code>
 We'll need to declare these new functions in our Selector class as well, so open up both Selector.h and Selector.mm. In Selector.h, add these lines:
+
 <code>
 	-(void)flyingBotFire;
+	
 	-(void)tritone;
+	
 	-(void)startRain;
+	
 	-(void)stopRain;
 </code>
 
@@ -403,8 +417,8 @@ In Selector.mm, add these four functions but just leave them empty for now.
 
 Now we have to locate the places in Angry Bot's code where these sound effects get triggered. The rain loop is triggered from a script called PlaySoundOnTrigger.js – locate it in Assets > Scripts > Misc and open it up. It contains just one function, OnTriggerEnter(), where we will make the call to nativeManager.startRain(). We will also need to add a second function, OnTriggerExit() where we will call nativeManager.stopRain(). Once finished, the script should look like this:
 <code>
-	#pragma strict
 
+	#pragma strict
 	@script RequireComponent (AudioSource)
 	
 	var onlyPlayOnce : boolean = true;
@@ -448,26 +462,21 @@ You may have noticed that in Angry Bots, the player actually starts the level ou
 We are about to create our first AudioKit Instrument based on AKDroplet. Create a new Cocoa Touch class in Xcode, subclassing from AKInstrument, and name it WaterDroplet. In WaterDroplet.h, add this code:
 
 <code>
+
 	@interface WaterDroplet : AKInstrument
-
 	@property(nonatomic,strong)AKInstrumentProperty *amplitude;
-
 	@property(readonly)AKAudio *auxOutput;
-
 	@end
-
 
 	@interface WaterDropletNote : AKNote
 	@property(nonatomic,strong)AKNoteProperty *frequency;
 	@property(nonatomic,strong)AKNoteProperty *amplitude;
-
 	@property(nonatomic,strong)AKNoteProperty *dampingFactor;
 	@property(nonatomic,strong)AKNoteProperty *energyReturn;
 	@property(nonatomic,strong)AKNoteProperty *mainResonantFrequency;
 	@property(nonatomic,strong)AKNoteProperty *firstResonantFrequency;
 	@property(nonatomic,strong)AKNoteProperty *secondResonantFrequency;
 	@property(nonatomic,strong)AKNoteProperty *intensity;
-
 	-(instancetype)initWithFrequency:(float)frequency;
 	@end
 
@@ -475,36 +484,28 @@ We are about to create our first AudioKit Instrument based on AKDroplet. Create 
 
 Notice how we've created an interface declaration for the WaterDroplet Instrument, and for WaterDropletNote, which subclasses from AKNote. In WaterDroplet.m, add the following code:
 <code>
+
 	#import "WaterDroplet.h"
 	#import "AKFoundation.h"
-
 	@implementation WaterDroplet
 
 	-(instancetype)init
 	{
-    	self = [super init];
-    	if(self)
-    	{
-	 	WaterDropletNote *note = [[WaterDropletNote alloc] init];
- 
-	 	_amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
+    		self = [super init];
+    		if(self)
+    		{
+	 		WaterDropletNote *note = [[WaterDropletNote alloc] init];
+	 		_amplitude = [self createPropertyWithValue:1.0 minimum:1.0 maximum:1.0];
+	 		
+        		AKDroplet *waterDroplet;
 
-        
-        	AKDroplet *waterDroplet;
-        
-        
-        	waterDroplet = [[AKDroplet alloc] initWithIntensity:note.intensity dampingFactor:note.dampingFactor 		energyReturn:note.energyReturn mainResonantFrequency:note.mainResonantFrequency 					firstResonantFrequency:note.firstResonantFrequency 									secondResonantFrequency:note.secondResonantFrequency amplitude:_amplitude];
-        
+        		waterDroplet = [[AKDroplet alloc] initWithIntensity:note.intensity dampingFactor:note.dampingFactor energyReturn:note.energyReturn mainResonantFrequency:note.mainResonantFrequency 					firstResonantFrequency:note.firstResonantFrequency 									secondResonantFrequency:note.secondResonantFrequency amplitude:_amplitude];
 
-        
         	[self connect:waterDroplet];
-        
 
-        
         	[self setAudioOutput:[waterDroplet scaledBy:_amplitude]];
-        
-        
-    	}
+
+    		}
     	return self;
 	}
 
@@ -555,20 +556,24 @@ AudioKit 2.0 also includes a range of pre-built instruments. We'll use Tambourin
 
 The Conductor class is responsible for playing the Instruments contained within the Orchestra. Let's create the Conductor class now. Open Xcode and create a new Cocoa Touch Class subclassing from NSObject. Name it “Conductor”. We are going to add three functions that will be called each time one of our three sound effects needs to be synthesized:
 <code>
+
 	-(void)playTone:(NSString*)tone;
+	
 	-(void)playWaterDroplet:(float)intensity dampingFactor:(float)damping energyReturn:(float)energy mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
+	
 	-(void)playTambourine:(float)damping mainResonantFreq:(float)mainFreq firstResonantFreq:(float)firstFreq secondResonantFreq:(float)secondFreq amplitude:(float)amp;
+	
 </code>
 Then in Conductor.m, we'll create instances of Notes for each instrument that hook into our harmonic set that we constructed based on the EchoNest information. The Conductor.m should look like this when we're all done:
 
 <code>
+
 	#import "Conductor.h"
 	#import "AKFoundation.h"
 	#import "WaterDroplet.h"
 	#import "Tambourine.h"
 	#import "FMOscillatorInstrument.h"
 	#import "KeyModeData.h"
-
 	@implementation Conductor
 	{
 	 	FMOscillatorInstrument *toneGenerator;
@@ -679,20 +684,23 @@ Then in Conductor.m, we'll create instances of Notes for each instrument that ho
 
 At this point, we've plugged Unity into AudioKit by creating a managed-to-native code bridge. We've presented the player an interface for choosing a song to play, and we are able to determine the key and mode for a chosen song by using the EchoNest API. We've programatically created a harmonic set of notes to use in the synthesis of our new sound effects, and we've added the three new Instrument types to the AudioKit Orchestra. All that's left to do is call on the Conductor to play these sound effects. We're going to do this from our Selector class. In Selector.mm, import our newly created Conductor class with this line:
 <code>
+
 	#import “Conductor.h”
+	
 </code>
 We will then create a new instance of the Conductor within the interface declaration:
 <code>
-	@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, AVAudioPlayerDelegate> {
-    
-    	Conductor *conductor;
-    
-    
+
+	@interface Selector() <MPMediaPickerControllerDelegate, NSURLSessionDelegate, NSURLSessionTaskDelegate, AVAudioPlayerDelegate> 
+	{
+    		Conductor *conductor;
 	}
 </code>
 Next, we allocate and initialize the Conductor in Selector's init() function:
 <code>
+
         conductor = [[Conductor alloc] init];
+        
 </code>
 
 Now we can start playing notes. Let's fill in the empty functions startRain(), tritone(), and flyingBotFire() that we created in Selector.mm earlier:
@@ -700,8 +708,7 @@ Now we can start playing notes. Let's fill in the empty functions startRain(), t
 <code>
 	-(void)startRain
 	{
-    		[conductor playWaterDroplet:10 dampingFactor:0.01 energyReturn:0.6 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
-    
+    	[conductor playWaterDroplet:10 dampingFactor:0.01 energyReturn:0.6 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
     	NSUserDefaults *myDefaults = [NSUserDefaults standardUserDefaults];
     
     	if([[myDefaults objectForKey:@"isRaining"] isEqualToString:@"TRUE"])
@@ -716,7 +723,6 @@ Here we call playWaterDroplet with the Conductor. Then we enter an if-statement 
 	-(void)tritone
 	{
     		KeyModeData *myData = [KeyModeData getInstance];
-    
     		if(_currentKey)
     		{
         
@@ -749,12 +755,13 @@ Here we call playWaterDroplet with the Conductor. Then we enter an if-statement 
 </code>
 Here we construct a new harmonic set – a tritone. A tritone is a very dissonant musical interval, and serves to create tension when the player is spotted by a crawling bot. We play the tritone with the FMOscillatorInstrument.
 <code>
+
 	-(void)flyingBotFire
-{
-        [conductor playTambourine:0.01 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
-}
+	{
+        	[conductor playTambourine:0.01 mainResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:0]] floatValue] firstResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:1]] floatValue] secondResonantFreq:[[_noteFreqDict objectForKey:[_harmonizationInfo objectAtIndex:2]] floatValue] amplitude:1.0];
+	}
+	
 </code>
 Finally, we play the tambourine instrument each time the flying bot fires its weapon. We've tuned the tambourine Instrument's resonant frequencies to the harmonic set we constructed based on the key and mode.
 
-
-That's it, you can now build the Xcode project, choose a song, and hear the three sound effects harmonize with the music. Enjoy!
+That's it, you can now build the Xcode project, choose a song from your iOS Music library, and hear the three sound effects harmonize with the music. 
