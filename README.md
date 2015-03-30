@@ -286,13 +286,13 @@ Save the file. We now have bridged the managed-to-native code gap. Let's build t
 
 ### Attenuating the original sound effects
 
-
+![Alt text](http://www.anor.ac/tutorial_images/AngryBots_AttenuateForWhat.png "Attenuate for what, Lil Jon? In this case, to make our own procedural sound effects!")
 
 For this tutorial, we'll focus on replacing three specific sound effects in Angry Bots:
 
-The sound of the rainfall outside of the factory at the start of the level
-The attack sound of the flying bot
-The alert sound that plays when a crawling bot spots the player
+* The sound of the rainfall outside of the factory at the start of the level
+* The attack sound of the flying bot
+* The alert sound that plays when a crawling bot spots the player
 
 To do this we are going to add an Audio Mixer object to our Unity project, route these specific sound effects through its main Group, and fully attenuate their volume. Navigate to the Unity project's Assets folder and click Assets > Create > Audio Mixer. Let's name the new mixer “myMixer”. 
 
