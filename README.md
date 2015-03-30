@@ -764,6 +764,6 @@ Finally, we play the tambourine instrument each time the flying bot fires its we
 
 That's it, you can now build the Xcode project, choose a song from your iOS Music library, and hear the three sound effects harmonize with the music. 
 
-** Ideas for further development
+## Ideas for further development
 
 * This tutorial only covered managed-to-native calls, however it is possible to go in the reverse direction and make native-to-managed calls using UnitySendMessage(). This could be useful for routing frames of audio data back into the managed environment to be used with Unity 5's native audio plugins.
