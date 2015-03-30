@@ -7,6 +7,8 @@ Languages used: C#, Objective-C
 
 This tutorial will guide you through the process of using AudioKit within a Unity iOS project to create procedural sound effects that are harmonized with the game music. The tutorial expects a basic level of familiarity with Unity and its game development environment, as well as Apple's Xcode IDE and Objective-C. The tutorial uses Unity 5.0.0.f4, available at http://www.unity3d.com, Xcode 6.2 available at https://developer.apple.com/xcode/downloads/), and AudioKit 2.0 available at http://www.audiokit.io. AudioKit is an open source iOS library for audio synthesis, processing, and analysis. 
 
+To see a video of the complete harmonization plugin running in Angry Bots, [click here](https://vimeo.com/119179438).
+
 ## The demo game: Angry Bots
 
 Angry Bots is a third person shooter game that is available as a free asset on Unity's Asset Store. The gameplay is straightforward. The player must navigate a dark futuristic factory setting in which the automated robot workers of the future have managed to override the first Asimovian law of robotics and have started attacking humans. The game has sound effects bundled with the asset, and while they are well suited for the dark and industrial mood of the game, it can be boring to hear the same static sound effects during repeated play. Angry Bots also does not have any musical component. For this tutorial, we will let the player be the DJ by allowing them choose their own musical soundtrack from their iOS Music library and then harmonize game sound effects with the music!
