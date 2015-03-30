@@ -1,11 +1,11 @@
 # Game Audio Harmonization Tutorial
-## Building a harmonization engine for game audio with Unity 5, Veemix, and AudioKit 2.0
+## Building a harmonization engine for game audio with Unity 5, and AudioKit 2.0
 
 Languages used: C#, Objective-C
 
 ## Overview
 
-This tutorial will guide you through the process of using AudioKit within a Unity iOS project to create procedural sound effects that are harmonized with the game music. The tutorial expects a basic level of familiarity with Unity and its game development environment, as well as Apple's Xcode IDE and Objective-C. The tutorial uses Unity 5.0.0.f4, available at http://www.unity3d.com, Xcode 6.2 available at https://developer.apple.com/xcode/downloads/), and AudioKit 2.0 available at http://www.audiokit.io. AudioKit is an open source iOS library for audio synthesis, processing, and analysis. 
+This tutorial will guide you through the process of using AudioKit within a Unity iOS project to create procedural sound effects that are harmonized with the game music. The tutorial expects a basic level of familiarity with Unity and its game development environment, as well as Apple's Xcode IDE and Objective-C. The tutorial uses Unity 5.0.0.f4, available at http://www.unity3d.com, Xcode 6.2 available at https://developer.apple.com/xcode/downloads/), and AudioKit 2.0 available at http://www.audiokit.io. AudioKit is an open source iOS library for audio synthesis, processing, and analysis. The tutorial also uses Veemix, an integrated game music platform (https://www.veemix.com) and EchoNest (http://www.echonest.com) for music information retrieval. 
 
 To see a video of the complete harmonization plugin running in Angry Bots, [click here](https://vimeo.com/119179438).
 
