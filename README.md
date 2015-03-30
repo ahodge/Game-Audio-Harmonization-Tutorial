@@ -725,11 +725,9 @@ Here we call playWaterDroplet with the Conductor. Then we enter an if-statement 
     		KeyModeData *myData = [KeyModeData getInstance];
     		if(_currentKey)
     		{
-        
+        	
 		 NSString *commonName = [[NSString alloc] initWithString:[myData.keyData objectForKey:_currentKey]];
 		 NSArray *noteSet = [NSArray arrayWithObjects:@"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", @"C", @"Db", @"D", @"Eb", @"E", @"F", @"Gb", @"G", @"Ab", @"A", @"Bb", @"B", nil];
-        
-        	NSLog(@"keyData: %@", myData.keyData);
         
         	NSMutableString *augFourth = [[NSMutableString alloc] initWithString:@""];
         
@@ -765,3 +763,7 @@ Here we construct a new harmonic set – a tritone. A tritone is a very dissonan
 Finally, we play the tambourine instrument each time the flying bot fires its weapon. We've tuned the tambourine Instrument's resonant frequencies to the harmonic set we constructed based on the key and mode.
 
 That's it, you can now build the Xcode project, choose a song from your iOS Music library, and hear the three sound effects harmonize with the music. 
+
+** Ideas for further development
+
+* This tutorial only covered managed-to-native calls, however it is possible to go in the reverse direction and make native-to-managed calls using UnitySendMessage(). This could be useful for routing frames of audio data back into the managed environment to be used with Unity 5's native audio plugins.
