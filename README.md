@@ -177,6 +177,7 @@ Let's carry on making the singleton for the Selector class and add the code for 
 	
 		return sharedSingleton;
 	}
+</code>
 
 This simply checks if an instance of Selector already exists. If it doesn't, it creates one for us.
 
